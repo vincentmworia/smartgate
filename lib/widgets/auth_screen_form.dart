@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartgate/main.dart';
 
 import 'input_field.dart';
 import '../models/logged_in_user.dart';
@@ -48,6 +49,7 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Spacer(),
             InputField(
               key: const ValueKey('username'),
               controller: _usernameController,
@@ -96,6 +98,7 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                 _loggedInUser.username = value!;
               },
             ),
+            const Spacer(),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     fixedSize: Size(
@@ -115,7 +118,13 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                   // store the button state in shared preferences API
                   // todo Submit the form
                 },
-                child: const Text("Register")),
+                child: const Text(
+                  "Register",
+                  style: TextStyle(
+                      color: MyApp.applicationSecondaryColor,
+                      letterSpacing: 2.0),
+                )),
+            const Spacer(),
           ],
         ));
   }
