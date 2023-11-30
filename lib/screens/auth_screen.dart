@@ -5,6 +5,7 @@ import '../widgets/auth_screen_form.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
+  static const routeName = '/Authentication';
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class AuthScreen extends StatelessWidget {
               color: MyApp.applicationPrimaryColor.withOpacity(0.85),
             ),
             Positioned(
-                top: height * .15,
+                top: height * .1,
                 // height: height * 0.15,
                 child: Container(
                   width: width * .15,
@@ -40,26 +41,30 @@ class AuthScreen extends StatelessWidget {
                     color: MyApp.applicationSecondaryColor,
                   ),
                   padding: const EdgeInsets.all(20),
-                  child: const Center(
+                  child: const Align(
+                    alignment: Alignment.topCenter,
                     child: Text(
-                      'LOGO',
+                      'ELIMU',
                       style: TextStyle(
                         color: MyApp.applicationPrimaryColor,
-                        fontSize: 24,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
+                        letterSpacing: 4.0,
                       ),
                     ),
                   ),
                 )),
             Container(
-              width: width * 0.35,
-              height: height * 0.5,
+              width: width < 800 ? width : width * .4,
+              height: height * 0.65,
               decoration: BoxDecoration(
                 color: MyApp.applicationSecondaryColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: AuthScreenForm(width: width),
+              child: AuthScreenForm(
+                width: width,
+                height: height,
+              ),
             ),
           ],
         );
