@@ -3,10 +3,23 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../widgets/auth_screen_form.dart';
 
-class AuthScreen extends StatelessWidget {
+class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
   static const routeName = '/Authentication';
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  var loading = false;
+
+  void alterLoadingStatus(bool status) {
+    setState(() {
+      loading = status;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +79,18 @@ class AuthScreen extends StatelessWidget {
               child: AuthScreenForm(
                 width: width,
                 height: height,
+                alterLoading: alterLoadingStatus,
               ),
             ),
+            if (loading)
+              Container(
+                width: width,
+                height: height,
+                color: MyApp.applicationSecondaryColor.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
           ],
         );
       }),

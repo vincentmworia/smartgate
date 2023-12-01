@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:smartgate/models/logged_in_user.dart';
 
 import '../private_data.dart';
 import './login_user_data.dart';
@@ -15,14 +16,11 @@ enum ConnectionStatus {
 
 class MqttProvider with ChangeNotifier {
   late MqttServerClient _mqttClient;
-  Timer? timerGraph;
-  Timer? timerDummyData;
 
   MqttServerClient get mqttClient => _mqttClient;
 
-  String? get disconnectTopic => _devicesClient;
 
-  String get disconnectMessage => "Disconnected-$_loginTime";
+  // String get disconnectMessage => "Disconnected-$_loginTime";
 
   var _connStatus = ConnectionStatus.disconnected;
 
@@ -39,9 +37,7 @@ class MqttProvider with ChangeNotifier {
                   : Platform.isLinux
                       ? "Linux"
                       : "Unknown Operating System";
-  String? _deviceId;
-  String? _devicesClient;
-  String? _loginTime;
+
 
   static void removeFirstElement(List list) {
     if (list.length >= (3600 / 2)) {
@@ -49,23 +45,18 @@ class MqttProvider with ChangeNotifier {
     }
   }
 
-  Future<ConnectionStatus> initializeMqttClient() async {
-    _deviceId =
-        '&${LoginUserData.getLoggedUser!.email}&${LoginUserData.getLoggedUser!.firstname}&${LoginUserData.getLoggedUser!.lastname}';
-    _devicesClient = 'cbes/dekut/devices/$platform/$_deviceId';
-
-    _loginTime = DateTime.now().toIso8601String();
+  Future<ConnectionStatus> initializeMqttClient(LoggedInUser usr) async {
     final connMessage = MqttConnectMessage()
       ..authenticateAs(mqttUsername, mqttPassword)
-      ..withWillTopic(_devicesClient!)
-      ..withWillMessage('DisconnectedHard-$_loginTime')
-      ..withWillRetain()
+      ..withWillTopic('will')
+      ..withWillMessage('Disconnected')
+      // ..withWillRetain()
       ..startClean()
       ..withWillQos(MqttQos.exactlyOnce);
 
     _mqttClient = MqttServerClient.withPort(
         mqttHost,
-        'flutter_client/$_devicesClient/${DateTime.now().toIso8601String()}',
+        DateTime.now().toIso8601String(),
         mqttPort)
       ..secure = true
       ..securityContext = SecurityContext.defaultContext
@@ -77,22 +68,12 @@ class MqttProvider with ChangeNotifier {
 
     try {
       await _mqttClient.connect();
-    } catch (e) {
-      if (kDebugMode) {
-        print('\n\nException: $e');
-      }
-
-      _mqttClient.disconnect();
-      _connStatus = ConnectionStatus.disconnected;
-    }
-
-    if (_connStatus == ConnectionStatus.connected) {
       _mqttClient.subscribe("#", MqttQos.exactlyOnce);
       _mqttClient.updates?.listen((List<MqttReceivedMessage<MqttMessage>> c) {
         final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
         final topic = c[0].topic;
         var message =
-            MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+        MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
         if (kDebugMode) {
           print(message);
         }
@@ -103,6 +84,15 @@ class MqttProvider with ChangeNotifier {
           notifyListeners();
         }
       });
+      // print('done');
+    } catch (e) {
+      if (kDebugMode) {
+        print('\n\nException: $e');
+        // todo prevent login and throw error to the UI
+      }
+
+      _mqttClient.disconnect();
+      _connStatus = ConnectionStatus.disconnected;
     }
 
     return _connStatus;
@@ -124,13 +114,11 @@ class MqttProvider with ChangeNotifier {
 
   void onConnected() {
     _connStatus = ConnectionStatus.connected;
-    publishMsg(_devicesClient!, 'Connected-$_loginTime');
+    // publishMsg(_devicesClient!, 'Connected-$_loginTime');
   }
 
   void onDisconnected() {
     _connStatus = ConnectionStatus.disconnected;
-    timerGraph?.cancel();
-    timerDummyData?.cancel();
     notifyListeners();
   }
 }

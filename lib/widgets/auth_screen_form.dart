@@ -13,10 +13,15 @@ import 'input_field.dart';
 import '../models/logged_in_user.dart';
 
 class AuthScreenForm extends StatefulWidget {
-  const AuthScreenForm({super.key, required this.width, required this.height});
+  const AuthScreenForm(
+      {super.key,
+      required this.width,
+      required this.height,
+      required this.alterLoading});
 
   final double width;
   final double height;
+  final Function alterLoading;
 
   @override
   State<AuthScreenForm> createState() => _AuthScreenFormState();
@@ -110,9 +115,9 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter the username';
                         }
-                        if (value != "admin") {
-                          return 'invalid username';
-                        }
+                        // if (value != "admin") {
+                        //   return 'invalid username';
+                        // }
                         return null;
                       },
                       onSaved: (value) {
@@ -137,9 +142,9 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter the password';
                         }
-                        if (value != "admin") {
-                          return 'invalid password';
-                        }
+                        // if (value != "admin") {
+                        //   return 'invalid password';
+                        // }
                         return null;
                       },
                       onSaved: (value) {
@@ -171,6 +176,7 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                             print(_loggedInUser.asMap());
                           }
                           // todo start animation for loading
+                          widget.alterLoading(true);
                           try {
                             final response = await http.post(
                                 Uri.parse(
@@ -183,21 +189,22 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                             final responseData = json.decode(response.body)
                                 as Map<String, dynamic>;
                             if (responseData['error'] != null) {
-                              _getErrorMessage(
-                                  responseData['error']['message']);
+                              widget.alterLoading(false);
+                              print(_getErrorMessage(
+                                  responseData['error']['message']));
                               // todo throw a popup and stop authentication
+                            } else {
+                              print('Here');
+                              await Future.delayed(Duration.zero)
+                                  .then((value) async {
+                                await Provider.of<MqttProvider>(context,
+                                        listen: false)
+                                    .initializeMqttClient(_loggedInUser)
+                                    .then((value) async =>
+                                        await Navigator.pushReplacementNamed(
+                                            context, HomeScreen.routeName));
+                              });
                             }
-                            await Future.delayed(Duration.zero)
-                                .then((value) async {
-                              await Provider.of<MqttProvider>(context,
-                                      listen: false)
-                                  .initializeMqttClient()
-                                  .then((value) async =>
-                                      await Navigator.pushReplacementNamed(
-                                          context, HomeScreen.routeName));
-                              // todo welcome
-                              // todo throw mqtt error
-                            });
                           } catch (e) {
                             var message = e.toString();
                             if ((message.contains('identity') ||
@@ -210,6 +217,8 @@ class _AuthScreenFormState extends State<AuthScreenForm> {
                             if (message == "timeout period has expired") {
                               message = "Please check your internet connection";
                             }
+                            widget.alterLoading(false);
+                            print(message);
                           }
                         },
                         child: const Icon(
