@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smartgate/providers/mqtt.dart';
 
 class GateIsOpened extends StatefulWidget {
   const GateIsOpened(this.gateOpen, {super.key});
@@ -28,8 +30,11 @@ class _GateIsOpenedState extends State<GateIsOpened>
   @override
   Widget build(BuildContext context) => FadeTransition(
       opacity: _animation,
-      child: Image.asset(
-        'images/hgate3${widget.gateOpen ? 2 : 1}.png',
-        fit: BoxFit.cover,
+      child: Consumer<MqttProvider>(
+        builder: (BuildContext context, MqttProvider mqttprov, Widget? child) =>
+            Image.asset(
+          'images/hgate3${mqttprov.gateStatus ? 2 : 1}.png',
+          fit: BoxFit.cover,
+        ),
       ));
 }

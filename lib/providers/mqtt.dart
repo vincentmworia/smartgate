@@ -1,13 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:smartgate/models/logged_in_user.dart';
 
+import '../models/logged_in_user.dart';
 import '../private_data.dart';
-import './login_user_data.dart';
 
 enum ConnectionStatus {
   disconnected,
@@ -18,7 +18,6 @@ class MqttProvider with ChangeNotifier {
   late MqttServerClient _mqttClient;
 
   MqttServerClient get mqttClient => _mqttClient;
-
 
   // String get disconnectMessage => "Disconnected-$_loginTime";
 
@@ -38,26 +37,24 @@ class MqttProvider with ChangeNotifier {
                       ? "Linux"
                       : "Unknown Operating System";
 
-
   static void removeFirstElement(List list) {
     if (list.length >= (3600 / 2)) {
       list.removeAt(0);
     }
   }
 
+  var gateStatus = false;
+
   Future<ConnectionStatus> initializeMqttClient(LoggedInUser usr) async {
     final connMessage = MqttConnectMessage()
       ..authenticateAs(mqttUsername, mqttPassword)
       ..withWillTopic('will')
       ..withWillMessage('Disconnected')
-      // ..withWillRetain()
       ..startClean()
       ..withWillQos(MqttQos.exactlyOnce);
 
     _mqttClient = MqttServerClient.withPort(
-        mqttHost,
-        DateTime.now().toIso8601String(),
-        mqttPort)
+        mqttHost, DateTime.now().toIso8601String(), mqttPort)
       ..secure = true
       ..securityContext = SecurityContext.defaultContext
       ..keepAlivePeriod = 30
@@ -73,14 +70,14 @@ class MqttProvider with ChangeNotifier {
         final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
         final topic = c[0].topic;
         var message =
-        MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+            MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
         if (kDebugMode) {
           print(message);
         }
         // TODO Split all the notify listeners to different classes
-        if (topic == "cbes/dekut/data/electrical_energy") {
-          // _electricalEnergy = ElectricalEnergy.fromMap(
-          //     json.decode(message) as Map<String, dynamic>);
+        if (topic == "smartgate/gatestatus") {
+          gateStatus = json.decode(message) as bool;
+          print(gateStatus);
           notifyListeners();
         }
       });
@@ -94,7 +91,6 @@ class MqttProvider with ChangeNotifier {
       _mqttClient.disconnect();
       _connStatus = ConnectionStatus.disconnected;
     }
-
     return _connStatus;
   }
 

@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:smartgate/widgets/gate_is_opened.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/mqtt.dart';
+import '../widgets/gate_is_opened.dart';
+import '../widgets/iot_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,11 +13,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shortestSide = MediaQuery.of(context).size.shortestSide;
-    final buttonStyle = ElevatedButton.styleFrom(
-        minimumSize: const Size(180,90)
-        // minimumSize: Size(shortestSide * 0.3, shortestSide * 0.2)
-    );
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -30,6 +29,7 @@ class HomeScreen extends StatelessWidget {
       body: LayoutBuilder(builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
+
         return SizedBox(
           width: width,
           height: height,
@@ -45,31 +45,29 @@ class HomeScreen extends StatelessWidget {
               ),
               Expanded(
                   flex: 1,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        style: buttonStyle,
-                        onPressed: () {
-                          if (kDebugMode) {
-                            print('OPEN GATE PRESSED');
-                          }
-                          // todo Publish to MQTT broker
-                        },
-                        child: const Text('OPEN'),
-                      ),
-                      ElevatedButton(
-                        style: buttonStyle,
-                        onPressed: () {
-                          if (kDebugMode) {
-                            print('CLOSE GATE PRESSED');
-                          }
-                          // todo Publish to MQTT broker
-                        },
-                        child: const Text('CLOSE'),
-                      ),
-                    ],
+                  child: Consumer<MqttProvider>(
+                    builder: (BuildContext context, MqttProvider mqttProvider,
+                            Widget? child) =>
+                        Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        IotButton(
+                          width: width,
+                          height: height,
+                          mqttProvider: mqttProvider,
+                          bnTopic: 'smartgate/opengate',
+                          title: 'Open',
+                        ),
+                        IotButton(
+                          width: width,
+                          height: height,
+                          mqttProvider: mqttProvider,
+                          bnTopic: 'smartgate/closegate',
+                          title: 'Close',
+                        ),
+                      ],
+                    ),
                   )),
             ],
           ),
