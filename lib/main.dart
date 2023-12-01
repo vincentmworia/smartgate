@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
             primary: applicationPrimaryColor,
             secondary: applicationSecondaryColor),
         useMaterial3: true,
-        appBarTheme: AppBarTheme(color: applicationPrimaryColor)
+        appBarTheme: const AppBarTheme(color: applicationPrimaryColor).copyWith(iconTheme: IconThemeData(color: Colors.white))
       ),
       home: const AuthScreen(),
       routes: {

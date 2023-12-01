@@ -5,6 +5,7 @@ import '../widgets/auth_screen_form.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
+
   static const routeName = '/Authentication';
 
   @override
@@ -56,9 +57,10 @@ class AuthScreen extends StatelessWidget {
                 )),
             Container(
               width: width < 800 ? width : width * .4,
-              height: height * 0.65,
+              height: width < 800 ? height : height * 0.65,
               decoration: BoxDecoration(
-                color: MyApp.applicationSecondaryColor,
+                color: MyApp.applicationSecondaryColor
+                    .withOpacity(width < 800 ? 0 : 1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: AuthScreenForm(
